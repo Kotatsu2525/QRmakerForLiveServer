@@ -1,0 +1,50 @@
+# ワークフローの名前（GitHubのActionsタブで表示される）
+name: Rust Build for Windows, macOS, and Linux
+
+# ワークフローが実行されるトリガー（きっかけ）
+on:
+  # mainブランチにプッシュされた時に実行
+  push:
+    branches: [ "main" ]
+  # Actionsタブから手動で実行できるようにする
+  workflow_dispatch:
+
+# 実行される一連の作業（ジョブ）
+jobs:
+  # "build" という名前のジョブ
+  build:
+    # 実行するOSを複数指定（マトリックス戦略）
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    # matrixで指定した各OS上で、以下のステップを実行
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      # ステップ1: リポジトリのコードをチェックアウト（ダウンロード）する
+      - uses: actions/checkout@v4
+
+      # ステップ2: Rustのビルドコマンドを実行する
+      - name: Build
+        run: cargo build --release --verbose
+
+      # ステップ3: 実行ファイルの名前をOSごとに決定する
+      - name: Set artifact name
+        id: set_name
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            echo "artifact_name=QRmakerForLiveServer-${{ runner.os }}.exe" >> $GITHUB_ENV
+            echo "file_path=target/release/QRmakerForLiveServer.exe" >> $GITHUB_ENV
+          else
+            echo "artifact_name=QRmakerForLiveServer-${{ runner.os }}" >> $GITHUB_ENV
+            echo "file_path=target/release/QRmakerForLiveServer" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      # ステップ4: 完成した実行ファイルをアーティファクトとしてアップロードする
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.artifact_name }}
+          path: ${{ env.file_path }}
