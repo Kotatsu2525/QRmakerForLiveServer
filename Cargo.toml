@@ -1,5 +1,5 @@
 [package]
-name = "QRmakerForLiveServer"
+name = "DevQR"
 version = "0.1.0"
 edition = "2024"
 

@@ -34,11 +34,11 @@ jobs:
         id: set_name
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
-            echo "artifact_name=QRmakerForLiveServer-${{ runner.os }}.exe" >> $GITHUB_ENV
-            echo "file_path=target/release/QRmakerForLiveServer.exe" >> $GITHUB_ENV
+            echo "artifact_name=DevQR-${{ runner.os }}.exe" >> $GITHUB_ENV
+            echo "file_path=target/release/DevQR.exe" >> $GITHUB_ENV
           else
-            echo "artifact_name=QRmakerForLiveServer-${{ runner.os }}" >> $GITHUB_ENV
-            echo "file_path=target/release/QRmakerForLiveServer" >> $GITHUB_ENV
+            echo "artifact_name=DevQR-${{ runner.os }}" >> $GITHUB_ENV
+            echo "file_path=target/release/DevQR" >> $GITHUB_ENV
           fi
         shell: bash
 
