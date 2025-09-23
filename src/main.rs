@@ -17,41 +17,43 @@ fn main() {
                 println!("  QRmakerForLS [ポート番号]");
                 println!("    ↳ ポート番号を手動で設定することもできます。");
 
-                None
+                std::process::exit(0);
             }
-            port_str => match port_str.parse::<u16>() {
-                Ok(port) => {
-                    println!("指定されたポート番号: {}", port);
-
-                    Some(port)
-                }
-                Err(_) => {
-                    eprintln!("エラー: '{}' は有効なポート番号ではありません。", port_str);
+            "--port" => match args.get(2) {
+                Some(port) => match port.parse::<u16>() {
+                    Ok(port) => {
+                        println!("指定されたポート番号: {}", port);
+                        Some(port)
+                    }
+                    Err(_) => {
+                        eprintln!("エラー: '{}' は有効なポート番号ではありません。", port);
+                        println!("ヘルプは '-h' または '--help' を引数に渡してください。");
+                        
+                        std::process::exit(1);
+                    }
+                },
+                None => {
+                    println!("エラー: ポート番号が指定されていません。");
                     println!("ヘルプは '-h' または '--help' を引数に渡してください。");
 
-                    None
+                    std::process::exit(1);
                 }
-            },
+            }
         },
-        None => {
-            readSettingFile()
-        }
+        None => read_setting_file(),
     };
-
 
     let path = match args.get(2) {
         Some(text) => {
-            if text.chars().next() == "/" {
+            if text.chars().next() == Some('/') {
                 text
             } else {
                 println!("エラー: '{}' は有効なpathではありません。", text);
-                println!("pathは '\' から始めてください。");
+                println!("pathは '/' から始めてください。");
                 panic!();
             }
         }
-        None => {
-            "/"
-        }
+        None => "/",
     };
 
     let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to bind socket");
@@ -62,7 +64,7 @@ fn main() {
         true => {
             println!("Local IP address: {}", local_address);
             //let url = format!("http://{}:5500/", local_address);
-            let url = format!("http://{}:{}/", local_address, port);
+            let url = format!("http://{}:{}/", local_address, port.unwrap());
             println!("Access the server at: {}", url);
             let code = QrCode::new(url).unwrap();
             let string = code.render::<unicode::Dense1x2>().build();
@@ -82,6 +84,6 @@ fn available_port(local_address: IpAddr) -> bool {
     }
 }
 
-fn readSettingFile() -> Option<u16> {
+fn read_setting_file() -> Option<u16> {
     Some(5500)
 }
