@@ -41,13 +41,11 @@ jobs:
       # ステップ1: リポジトリのコードをチェックアウト（ダウンロード）する
       - uses: actions/checkout@v4
 
-      # ステップ2: Rustツールチェインのセットアップ
+      # ステップ2: Rustツールチェインのセットアップ（最新版を使用）
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-          override: true
+          targets: ${{ matrix.target }}
 
       # ステップ3: 指定したターゲット向けにビルドする
       - name: Build
