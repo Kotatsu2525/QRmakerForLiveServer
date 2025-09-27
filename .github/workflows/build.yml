@@ -16,7 +16,23 @@ jobs:
     # 実行するOSを複数指定（マトリックス戦略）
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: DevQR-Windows-x64
+            binary_name: DevQR.exe
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: DevQR-Linux-x64
+            binary_name: DevQR
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: DevQR-macOS-x64
+            binary_name: DevQR
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: DevQR-macOS-ARM64
+            binary_name: DevQR
 
     # matrixで指定した各OS上で、以下のステップを実行
     runs-on: ${{ matrix.os }}
@@ -25,26 +41,29 @@ jobs:
       # ステップ1: リポジトリのコードをチェックアウト（ダウンロード）する
       - uses: actions/checkout@v4
 
-      # ステップ2: Rustのビルドコマンドを実行する
-      - name: Build
-        run: cargo build --release --verbose
+      # ステップ2: Rustツールチェインのセットアップ
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
 
-      # ステップ3: 実行ファイルの名前をOSごとに決定する
-      - name: Set artifact name
-        id: set_name
+      # ステップ3: 指定したターゲット向けにビルドする
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }} --verbose
+
+      # ステップ4: 配布用ディレクトリを作成し、実行ファイルとREADMEをコピー
+      - name: Prepare distribution package
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            echo "artifact_name=DevQR-${{ runner.os }}.exe" >> $GITHUB_ENV
-            echo "file_path=target/release/DevQR.exe" >> $GITHUB_ENV
-          else
-            echo "artifact_name=DevQR-${{ runner.os }}" >> $GITHUB_ENV
-            echo "file_path=target/release/DevQR" >> $GITHUB_ENV
-          fi
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} dist/
+          cp README.md dist/
         shell: bash
 
-      # ステップ4: 完成した実行ファイルをアーティファクトとしてアップロードする
+      # ステップ5: 完成したパッケージをアーティファクトとしてアップロードする
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.artifact_name }}
-          path: ${{ env.file_path }}
+          name: ${{ matrix.artifact_name }}-package
+          path: dist/
