@@ -14,7 +14,7 @@ struct Args {
 
     #[arg(long, default_value = "/")]
     path: String,
-
+    ///nomal QR maker. input text and make a QR.
     #[arg(long)]
     qr: bool,
 }
